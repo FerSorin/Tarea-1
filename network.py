@@ -29,17 +29,22 @@ class Network(object):
         layer is assumed to be an input layer, and by convention we
         won't set any biases for those neurons, since biases are only
         ever used in computing the outputs from later layers."""
-        self.num_layers = len(sizes)
+        self.num_layers = len(sizes) 
+        #Esto define el numero de neuronas que tendrá nuestra red.
         self.sizes = sizes
-        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x)
+        self.biases = [np.random.randn(y, 1) for y in sizes[1:]] 
+        #Crea número aleatorios en una fila para los biases (sesgos) en forma de matriz de tamaño (1,y)
+        self.weights = [np.random.randn(y, x)                 
                         for x, y in zip(sizes[:-1], sizes[1:])]
+                        #Crea una matriz de tamaño (x,y), asginando pesos a cada neurona creada de manera aleatoria
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
         for b, w in zip(self.biases, self.weights):
             a = sigmoid(np.dot(w, a)+b)
         return a
+        #Nos regresa un valor de a, para la funcion sigmoide, tomando en cuenta los bias y weights y así usarlo como nuevo input
+        #para una nueva neurona.
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
             test_data=None):
@@ -52,13 +57,15 @@ class Network(object):
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
         if test_data:
+            #Modifica de lectura de las listas en forma de matriz para ser procesadad como lista de datos.
             test_data = list(test_data)
             n_test = len(test_data)
 
         training_data = list(training_data)
         n = len(training_data)
         for j in range(epochs):
-            random.shuffle(training_data)
+            random.shuffle(training_data) #Da de forma aleatoria los datos y así la neurona no lea siempre los mismos datos y tenga
+            #un entrenamiento adecuado.
             mini_batches = [
                 training_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
@@ -69,7 +76,9 @@ class Network(object):
                     j, self.evaluate(test_data), n_test))
             else:
                 print("Epoch {0} complete".format(j))
-
+        #En orden, epoch cambia la cantidad de veces que la red entera es entrenada.
+        #El minibach nos da una cantidad de datos reducidos para no utilizar todos la datos.
+        #Eta es que tan grandes son los saltos que hace la red al ser entrenada.
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
         gradient descent using backpropagation to a single mini batch.
@@ -81,11 +90,12 @@ class Network(object):
             delta_nabla_b, delta_nabla_w = self.backprop(x, y)
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
+            #Ambas nablas van decreciendo en la propagacion de la red.
         self.weights = [w-(eta/len(mini_batch))*nw
                         for w, nw in zip(self.weights, nabla_w)]
         self.biases = [b-(eta/len(mini_batch))*nb
                        for b, nb in zip(self.biases, nabla_b)]
-
+        #Actualiza tu lista de pesos y sesgos de la red usando los deltas y cambiando constantemente las matrices (x,y).
     def backprop(self, x, y):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
         gradient for the cost function C_x.  ``nabla_b`` and
@@ -94,19 +104,23 @@ class Network(object):
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         # feedforward
+        #Ambas nablas empiezan en 0, en la primera iteración del codigo, y así sobreescribirse.
         activation = x
         activations = [x] # list to store all the activations, layer by layer
         zs = [] # list to store all the z vectors, layer by layer
+        #Guarda los vecotres resultantes de cada capa.
         for b, w in zip(self.biases, self.weights):
             z = np.dot(w, activation)+b
             zs.append(z)
             activation = sigmoid(z)
             activations.append(activation)
         # backward pass
+        #Selecciona la función de costo con base a la sigmoide elejida.
         delta = self.cost_derivative(activations[-1], y) * \
             sigmoid_prime(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+        #Actualiza a la neuroa previa con base a los bias y weigths
         # Note that the variable l in the loop below is used a little
         # differently to the notation in Chapter 2 of the book.  Here,
         # l = 1 means the last layer of neurons, l = 2 is the
@@ -120,6 +134,7 @@ class Network(object):
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
         return (nabla_b, nabla_w)
+        #Evalua las sigmoides y sus derivadas para cada capa de nueronas.
 
     def evaluate(self, test_data):
         """Return the number of test inputs for which the neural
@@ -129,7 +144,7 @@ class Network(object):
         test_results = [(np.argmax(self.feedforward(x)), y)
                         for (x, y) in test_data]
         return sum(int(x == y) for (x, y) in test_results)
-
+        #Estas fucniones definidas, nos da e resultado de la última capa de la red neuronal
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
         \partial a for the output activations."""
